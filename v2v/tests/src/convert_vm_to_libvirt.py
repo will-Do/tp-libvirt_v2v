@@ -25,7 +25,6 @@ def run(test, params, env):
     xen_pwd = params.get("xen_pwd", "PWD.EXAMPLE")
     vpx_ip = params.get("vpx_ip", "ESX.EXAMPLE")
     vpx_pwd = params.get("vpx_pwd", "PWD.EXAMPLE")
-    vpx_user = params.get("vpx_user", "root")
     vpx_pwd_file = params.get("vpx_passwd_file")
     vpx_dc = params.get("vpx_dc", "VPX.DC.EXAMPLE")
     esx_ip = params.get("esx_ip", "ESX.EXAMPLE")
@@ -39,7 +38,7 @@ def run(test, params, env):
     emulated_img = params.get("emulated_image_path", "v2v_emulated.img")
     emulated_size = params.get("emulated_image_size", "10G")
 
-    # If target_path is not an abs path, join it to h/ata_dir.tmpdir
+    # If target_path is not an abs path, join it to data_dir.tmpdir
     if not os.path.dirname(target_path):
         target_path = os.path.join(data_dir.get_tmp_dir(), target_path)
 
@@ -48,9 +47,6 @@ def run(test, params, env):
     files = params.get("config_files")
     network = params.get("network")
     bridge = params.get("bridge")
-
-    # Result check about
-    ignore_virtio = "yes" == params.get("ignore_virtio", "no")
 
     # Set libguestfs environment
     os.environ['LIBGUESTFS_BACKEND'] = 'direct'
@@ -89,7 +85,7 @@ def run(test, params, env):
     # Remote virt-v2v uri's instance
     ruri = utils_v2v.Uri(hypervisor)
     remote_uri = ruri.get_uri(remote_ip, vpx_dc, esx_ip)
-    logging.debug("The current virsh uri: [%s]", remote_uri)
+    logging.debug("The current virsh uri: %s", remote_uri)
 
     # Check remote vms
     rvirsh_dargs = {'uri': remote_uri, 'remote_ip': remote_ip,
@@ -133,11 +129,10 @@ def run(test, params, env):
                      image_size=emulated_size)
         logging.debug(lsp.pool_info(pool_name))
 
-        try:
-            result = utils_v2v.v2v_cmd(v2v_params)
-            logging.debug(result)
-        except error.CmdError, detail:
-            raise error.TestFail("Virt v2v failed:\n%s" % str(detail))
+        ret = utils_v2v.v2v_cmd(v2v_params)
+        logging.debug("virt-v2 verbose messages:\n%s", ret)
+        if ret.exit_status != 0:
+            raise error.TestFail("Convert VM failed")
 
         # Update parameters for local hypervisor and vm
         logging.debug("XML info:\n%s", virsh.dumpxml(vm_name))

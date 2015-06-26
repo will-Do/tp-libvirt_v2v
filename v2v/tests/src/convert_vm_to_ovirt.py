@@ -121,8 +121,9 @@ def run(test, params, env):
     try:
         # Run test case
         ret = utils_v2v.v2v_cmd(args_dict)
+        logging.debug("virt-v2 verbose messages:\n%s", ret)
         if ret.exit_status != 0:
-            raise error.TestFail("Convert VM failed: %s" % ret.stderr)
+            raise error.TestFail("Convert VM failed")
         import_to_ovirt()
     finally:
         if hypervisor == "xen":
