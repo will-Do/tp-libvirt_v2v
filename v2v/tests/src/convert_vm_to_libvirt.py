@@ -132,6 +132,8 @@ def run(test, params, env):
         ret = utils_v2v.v2v_cmd(v2v_params)
         logging.debug("virt-v2 verbose messages:\n%s", ret)
         if ret.exit_status != 0:
+            if "Input/output error" in ret.stderr:
+                raise error.TestFail("Encounter BZ#1146007")
             raise error.TestFail("Convert VM failed")
 
         # Update parameters for local hypervisor and vm

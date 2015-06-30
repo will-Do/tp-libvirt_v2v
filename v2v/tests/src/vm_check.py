@@ -179,11 +179,14 @@ def run(test, params, env):
                 if check_obj.os_version == "win2003":
                     if img_match_ret == 0:
                         check_obj.click_left_button()
+                        # VM may have no response in awhile
                         time.sleep(20)
+                        check_obj.click_left_button()
                         check_obj.click_tab_enter()
                     elif img_match_ret == 1:
                         check_obj.click_left_button()
                         time.sleep(20)
+                        check_obj.click_left_button()
                         check_obj.click_tab_enter()
                         check_obj.click_left_button()
                         check_obj.send_win32_key('VK_RETURN')
@@ -212,13 +215,16 @@ def run(test, params, env):
         # Try to create nc/telnet session for windows guest
         check_obj.create_session()
 
+        errs = []
         # 1. Check viostor file
         logging.info("Check windows viostor info")
         viostor_check = True
         output = check_obj.get_viostor_info()
         if not output:
+            err_msg = "Windows viostor info check failed"
+            errs.append(err_msg)
+            logging.error(err_msg)
             viostor_check = False
-            logging.error("Windows viostor info check failed")
 
         # 2. Check Red Hat drivers
         logging.info("Check Red Hat drivers")
@@ -230,8 +236,10 @@ def run(test, params, env):
             if driver in win_dirves:
                 logging.info("Find driver: %s", driver)
             else:
+                err_msg = "Not find driver: %s" % driver
+                errs.append(err_msg)
+                logging.error(err_msg)
                 driver_check = False
-                logging.error("Not find driver: %s", driver)
         video_driver = "vga"
         if target == "ovirt":
             video_driver = "qxl"
@@ -239,17 +247,21 @@ def run(test, params, env):
         if video_driver in win_dirves:
             logging.info("Find driver: %s", video_driver)
         else:
-            #driver_check = False
-            logging.error("Not find driver: %s", video_driver)
+            err_msg = "Not find driver: %s" % video_driver
+            errs.append(err_msg)
+            logging.error(err_msg)
+            driver_check = False
 
         # 3. Renew network
         logging.info("Renew network for windows guest")
         network_check = True
         if not check_obj.get_network_restart():
-            logging.error("Renew network failed")
+            err_msg = "Renew network failed"
+            logging.error(err_msg)
+            errs.append(err_msg)
             network_check = False
         if not all([viostor_check, driver_check, network_check]):
-            raise error.TestFail("Windows check failed as above errors")
+            raise error.TestFail("Windows check failed: %s" % errs)
 
     check_obj = utils_v2v.VMCheck(test, params, env)
     try:
