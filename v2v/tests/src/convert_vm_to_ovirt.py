@@ -86,7 +86,7 @@ def run(test, params, env):
         except Exception, e:
             # Try to delete the vm from export domain
             vm.delete_from_export_domain(export_name)
-            raise error.TestFail("Import %s failed: %s" % e)
+            raise error.TestFail("Import %s failed: %s" % (vm.name, e))
         # Start VM after import successfully
         vm.start(wait_for_up=wait_for_up, timeout=timeout)
 
