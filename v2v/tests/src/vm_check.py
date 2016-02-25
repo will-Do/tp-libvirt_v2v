@@ -3,6 +3,7 @@ import re
 import time
 import logging
 import commands
+from virttest import utils_sasl
 from autotest.client.shared import error
 from virttest import utils_v2v
 from virttest import data_dir

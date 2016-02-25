@@ -120,13 +120,12 @@ def run(test, params, env):
         fp.close()
 
     # Create sasl user on the ovirt host
-    user_pwd = "[[%s, %s]]" % (params.get("sasl_user"), params.get("sasl_pwd"))
-    sasl_args = {'sasl_user_pwd': user_pwd}
-    v2v_sasl = utils_sasl.SASL(*sasl_args)
+    user_pwd = "[['%s', '%s']]" % (params.get("sasl_user"), params.get("sasl_pwd"))
+    v2v_sasl = utils_sasl.SASL(sasl_user_pwd=user_pwd)
     v2v_sasl.server_ip = params.get("remote_ip")
     v2v_sasl.server_user = params.get('remote_user')
     v2v_sasl.server_pwd = params.get('remote_pwd')
-    v2v_sasl.setup()
+    v2v_sasl.setup(remote=True)
 
     try:
         # Run test case
@@ -136,7 +135,6 @@ def run(test, params, env):
             raise error.TestFail("Convert VM failed")
         import_to_ovirt()
     finally:
-        v2v_sasl.cleanup()
         if hypervisor == "xen":
             utils.run("ssh-agent -k")
         if hypervisor == "esx":
