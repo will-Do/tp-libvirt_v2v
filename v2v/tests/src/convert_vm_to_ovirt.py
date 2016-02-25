@@ -2,6 +2,7 @@ import os
 import logging
 from virttest import utils_v2v
 from virttest import utils_misc
+from virttest import utils_sasl
 from virttest import ovirt
 from autotest.client import utils
 from autotest.client.shared import ssh_key, error
@@ -118,6 +119,15 @@ def run(test, params, env):
         fp.write(vpx_pwd)
         fp.close()
 
+    # Create sasl user on the ovirt host
+    user_pwd = "[[%s, %s]]" % (params.get("sasl_user"), params.get("sasl_pwd"))
+    sasl_args = {'sasl_user_pwd': user_pwd}
+    v2v_sasl = utils_sasl.SASL(*sasl_args)
+    v2v_sasl.server_ip = params.get("remote_ip")
+    v2v_sasl.server_user = params.get('remote_user')
+    v2v_sasl.server_pwd = params.get('remote_pwd')
+    v2v_sasl.setup()
+
     try:
         # Run test case
         ret = utils_v2v.v2v_cmd(args_dict)
@@ -126,6 +136,7 @@ def run(test, params, env):
             raise error.TestFail("Convert VM failed")
         import_to_ovirt()
     finally:
+        v2v_sasl.cleanup()
         if hypervisor == "xen":
             utils.run("ssh-agent -k")
         if hypervisor == "esx":
